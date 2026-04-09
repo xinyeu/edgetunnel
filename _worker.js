@@ -2363,6 +2363,12 @@ function 掩码敏感信息(文本, 前缀长度 = 3, 后缀长度 = 2) {
 	return `${前缀}${'*'.repeat(星号数量)}${后缀}`;
 }
 
+function countryCodeToFlag(countryCode) {
+	if (!countryCode || countryCode.length !== 2) return '';
+	const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0));
+	return String.fromCodePoint(...codePoints);
+}
+
 async function MD5MD5(文本) {
 	const 编码器 = new TextEncoder();
 
@@ -2786,6 +2792,10 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1, TLS = true
 	const cidr_url = isp ? `https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR/${isp.file}.txt` : 'https://raw.githubusercontent.com/cmliu/cmliu/main/CF-CIDR.txt';
 	const cfname = isp?.name || 'CF官方优选';
 	const cfport = TLS ? [443, 2053, 2083, 2087, 2096, 8443] : [80, 8080, 8880, 2052, 2082, 2086, 2095];
+	const countryCode = request.cf.country || 'US';
+	const city = request.cf.city || 'CF';
+	const flag = countryCodeToFlag(countryCode);
+	const nodeName = `${flag} ${city} ${index + 1}`;
 	let cidrList = [];
 	try { const res = await fetch(cidr_url); cidrList = res.ok ? await 整理成数组(await res.text()) : ['104.16.0.0/13'] } catch { cidrList = ['104.16.0.0/13'] }
 
@@ -2804,7 +2814,8 @@ async function 生成随机IP(request, count = 16, 指定端口 = -1, TLS = true
 		const 目标端口 = 指定端口 === -1
 			? cfport[Math.floor(Math.random() * cfport.length)]
 			: (TLS ? 指定端口 : (NOTLS端口[TLS端口.indexOf(Number(指定端口))] ?? 指定端口));
-		return `${ip}:${目标端口}#${cfname}${index + 1}`;
+		const nodeName = `${flag} ${city} ${index + 1}`;
+		return `${ip}:${目标端口}#${encodeURIComponent(nodeName)}`;
 	});
 	return [randomIPs, randomIPs.join('\n')];
 }
