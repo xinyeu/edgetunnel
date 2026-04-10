@@ -315,10 +315,17 @@ export default {
 
 								const IP位置查询 = (ip) => {
 									const 第一段 = parseInt(ip.split('.')[0]);
+									// 美国
 									if (第一段 >= 104 && 第一段 <= 111) return '🇺🇸 USA';
 									if (第一段 >= 172 && 第一段 <= 173) return '🇺🇸 USA';
+									// 新加坡
 									if (第一段 >= 188 && 第一段 <= 188) return '🇸🇬 Singapore';
+									// 香港
 									if (第一段 >= 103 && 第一段 <= 103) return '🇭🇰 HK';
+									// 日本
+									if ([133, 157, 175, 203].includes(第一段)) return '🇯🇵 Japan';
+									// 欧洲 (荷兰/德国/英国等)
+									if ([145, 178, 185, 195].includes(第一段)) return '🇪🇺 Europe';
 									return '🌐 CF';
 								};
 								const 节点位置 = IP位置查询(节点地址);
