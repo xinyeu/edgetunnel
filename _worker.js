@@ -304,6 +304,23 @@ export default {
 							const ECHLINK参数 = config_JSON.ECH ? `&ech=${encodeURIComponent((config_JSON.ECHConfig.SNI ? config_JSON.ECHConfig.SNI + '+' : '') + config_JSON.ECHConfig.DNS)}` : '';
 							const isLoonOrSurge = ua.includes('loon') || ua.includes('surge');
 							const { type: 传输协议, 路径字段名, 域名字段名 } = 获取传输协议配置(config_JSON);
+
+							// CF静态IP位置表（同步查询）
+							const CF_IP位置表 = {
+								104: '🇺🇸 USA', 105: '🇺🇸 USA', 106: '🇺🇸 USA', 107: '🇺🇸 USA', 108: '🇺🇸 USA', 109: '🇺🇸 USA', 110: '🇺🇸 USA', 111: '🇺🇸 USA',
+								172: '🇺🇸 USA', 173: '🇺🇸 USA',
+								188: '🇸🇬 Singapore',
+								103: '🇭🇰 HK',
+								133: '🇯🇵 Japan', 157: '🇯🇵 Japan', 175: '🇯🇵 Japan', 203: '🇯🇵 Japan',
+								145: '🇪🇺 Europe', 178: '🇪🇺 Europe', 185: '🇪🇺 Europe', 195: '🇪🇺 Europe',
+								149: '🇩🇪 Germany', 194: '🇳🇱 Netherlands', 213: '🇪🇺 Europe', 212: '🇫🇷 France',
+								151: '🇵🇱 Poland', 176: '🇸🇪 Sweden', 179: '🇪🇸 Spain', 192: '🇬🇧 UK'
+							};
+							const IP位置查询 = (ip) => {
+								const 第一段 = parseInt(ip.split('.')[0]);
+								return CF_IP位置表[第一段] || '🌐 CF';
+							};
+
 							订阅内容 = 其他节点LINK + 完整优选IP.map((原始地址, index) => {
 								// 统一正则: 匹配 域名/IPv4/IPv6地址 + 可选端口 + 可选备注
 								// 示例: 
@@ -313,21 +330,6 @@ export default {
 								const regex = /^(\[[\da-fA-F:]+\]|[\d.]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*)(?::(\d+))?(?:#(.+))?$/;
 								const match = 原始地址.match(regex);
 
-								const IP位置查询 = (ip) => {
-									const 第一段 = parseInt(ip.split('.')[0]);
-									// 美国
-									if (第一段 >= 104 && 第一段 <= 111) return '🇺🇸 USA';
-									if (第一段 >= 172 && 第一段 <= 173) return '🇺🇸 USA';
-									// 新加坡
-									if (第一段 >= 188 && 第一段 <= 188) return '🇸🇬 Singapore';
-									// 香港
-									if (第一段 >= 103 && 第一段 <= 103) return '🇭🇰 HK';
-									// 日本
-									if ([133, 157, 175, 203].includes(第一段)) return '🇯🇵 Japan';
-									// 欧洲 (荷兰/德国/英国等)
-									if ([145, 178, 185, 195].includes(第一段)) return '🇪🇺 Europe';
-									return '🌐 CF';
-								};
 								const 节点位置 = IP位置查询(节点地址);
 
 								let 节点地址, 节点端口 = "443", 节点备注;
