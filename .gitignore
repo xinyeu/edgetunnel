@@ -2,6 +2,9 @@
 demo/
 tmp/
 
+# 打包临时目录
+edgetunnel-main/
+
 # 依赖包
 node_modules/
 package-lock.json
