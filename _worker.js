@@ -313,12 +313,22 @@ export default {
 								const regex = /^(\[[\da-fA-F:]+\]|[\d.]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*)(?::(\d+))?(?:#(.+))?$/;
 								const match = 原始地址.match(regex);
 
+								const IP位置查询 = (ip) => {
+									const 第一段 = parseInt(ip.split('.')[0]);
+									if (第一段 >= 104 && 第一段 <= 111) return '🇺🇸 USA';
+									if (第一段 >= 172 && 第一段 <= 173) return '🇺🇸 USA';
+									if (第一段 >= 188 && 第一段 <= 188) return '🇸🇬 Singapore';
+									if (第一段 >= 103 && 第一段 <= 103) return '🇭🇰 HK';
+									return '🌐 CF';
+								};
+								const 节点位置 = IP位置查询(节点地址);
+
 								let 节点地址, 节点端口 = "443", 节点备注;
 
 								if (match) {
 									节点地址 = match[1];  // IP地址或域名(可能带方括号)
 									节点端口 = match[2] ? match[2] : (协议类型 === 'ss' && !config_JSON.SS.TLS) ? '80' : '443';  // 端口,TLS默认443 noTLS默认80
-									节点备注 = match[3] || 节点地址 + ' #' + (index + 1);  // 备注,默认显示地址+序号
+									节点备注 = match[3] || 节点位置 + ' #' + (index + 1);  // 备注,默认显示位置+序号
 								} else {
 									// 不规范的格式，跳过处理返回null
 									console.warn(`[订阅内容] 不规范的IP格式已忽略: ${原始地址}`);
