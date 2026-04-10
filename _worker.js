@@ -302,53 +302,23 @@ export default {
 								其他节点LINK += 优选生成器其他节点;
 							}
 							const ECHLINK参数 = config_JSON.ECH ? `&ech=${encodeURIComponent((config_JSON.ECHConfig.SNI ? config_JSON.ECHConfig.SNI + '+' : '') + config_JSON.ECHConfig.DNS)}` : '';
-const isLoonOrSurge = ua.includes('loon') || ua.includes('surge');
+							const isLoonOrSurge = ua.includes('loon') || ua.includes('surge');
 							const { type: 传输协议, 路径字段名, 域名字段名 } = 获取传输协议配置(config_JSON);
-							const 处理单个节点 = async 原始地址 => {
+							订阅内容 = 其他节点LINK + 完整优选IP.map((原始地址, index) => {
+								// 统一正则: 匹配 域名/IPv4/IPv6地址 + 可选端口 + 可选备注
+								// 示例: 
+								//   - 域名: hj.xmm1993.top:2096#备注 或 example.com
+								//   - IPv4: 166.0.188.128:443#Los Angeles 或 166.0.188.128
+								//   - IPv6: [2606:4700::]:443#CMCC 或 [2606:4700::]
 								const regex = /^(\[[\da-fA-F:]+\]|[\d.]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*)(?::(\d+))?(?:#(.+))?$/;
 								const match = 原始地址.match(regex);
 
 								let 节点地址, 节点端口 = "443", 节点备注;
+
 								if (match) {
-									节点地址 = match[1];
-									节点端口 = match[2] ? match[2] : (协议类型 === 'ss' && !config_JSON.SS.TLS) ? '80' : '443';
-									if (!match[3]) {
-										const 国家emoji = { US: '🇺🇸', CN: '🇨🇳', SG: '🇸🇬', JP: '🇯🇵', HK: '🇭🇰', TW: '🇹🇼', GB: '🇬🇧', DE: '🇩🇪', FR: '🇫🇷', AU: '🇦🇺', CA: '🇨🇦', KR: '🇰🇷', IN: '🇮🇳', RU: '🇷🇺', BR: '🇧🇷', NL: '🇳🇱', SE: '🇸🇪', CH: '🇨🇭', IE: '🇮🇪', IT: '🇮🇹', ES: '🇪🇸', NO: '🇳🇴', DK: '🇩🇰', FI: '🇫🇮', PL: '🇵🇱', PT: '🇵🇹', NZ: '🇳🇿', TH: '🇹🇭', VN: '🇻🇳', MY: '🇲🇾', PH: '🇵🇭', ID: '🇮🇩', AE: '🇦🇪', SA: '🇸🇦', IL: '🇮🇱', TR: '🇹🇷', ZA: '🇿🇦', MX: '🇲🇽', AR: '🇦🇷', CL: '🇨🇱', CO: '🇨🇴', PE: '🇵🇪' };
-										const DNS解析 = async (domain) => { try { const res = await fetch(`https://dns.google/resolve?name=${domain}&type=A`); const data = await res.json(); return data.Answer?.[0]?.data || domain; } catch { return domain; } };
-										const 获取节点地理 = async (ip) => { try { const res = await fetch(`https://ipapi.co/${ip}/json/`); const data = await res.json(); return { countryCode: data.country_code || 'US', city: data.city || 'Unknown' }; } catch { return { countryCode: 'US', city: 'Unknown' }; } };
-										const 节点IP = /^\d+\.\d+\.\d+\.\d+$/.test(节点地址) ? 节点地址 : await DNS解析(节点地址);
-										const 节点地理 = await 获取节点地理(节点IP);
-										const 序号 = 节点IP.split('.').reduce((a, b) => a + parseInt(b || 0), 0) % 1000 + 1;
-										节点备注 = `${国家emoji[节点地理.countryCode] || '🌐'} ${节点地理.city || 'Unknown'} #${序号}`;
-									} else {
-										节点备注 = match[3];
-									}
-								} else {
-									console.warn(`[订阅内容] 不规范的IP格式已忽略: ${原始地址}`);
-									return null;
-								}
-
-								let 完整节点路径 = config_JSON.完整节点路径;
-								if (反代IP池.length > 0) {
-									const 匹配到的反代IP = 反代IP池.find(p => p.includes(节点地址));
-									if (匹配到的反代IP) 完整节点路径 = (`${config_JSON.PATH}/proxyip=${匹配到的反代IP}`).replace(/\/\//g, '/') + (config_JSON.启用0RTT ? '?ed=2560' : '');
-								}
-								if (isLoonOrSurge) 完整节点路径 = 完整节点路径.replace(/,/g, '%2C');
-
-								if (协议类型 === 'ss' && !作为优选订阅生成器) {
-									完整节点路径 = (完整节点路径.includes('?') ? 完整节点路径.replace('?', '?enc=' + config_JSON.SS.加密方式 + '&') : (完整节点路径 + '?enc=' + config_JSON.SS.加密方式)).replace(/([=,])/g, '\\$1');
-									if (!isSubConverterRequest) 完整节点路径 = 完整节点路径 + ';mux=0';
-									return `${协议类型}://${btoa(config_JSON.SS.加密方式 + ':00000000-0000-4000-8000-000000000000')}@${节点地址}:${节点端口}?plugin=v2${encodeURIComponent('ray-plugin;mode=websocket;host=example.com;path=' + (config_JSON.随机路径 ? 随机路径(完整节点路径) : 完整节点路径) + (config_JSON.SS.TLS ? ';tls' : '')) + ECHLINK参数 + TLS分片参数}#${encodeURIComponent(节点备注)}`;
-								} else {
-									const 传输路径参数值 = 获取传输路径参数值(config_JSON, 完整节点路径, 作为优选订阅生成器);
-									return `${协议类型}://00000000-0000-4000-8000-000000000000@${节点地址}:${节点端口}?security=tls&type=${传输协议 + ECHLINK参数}&${域名字段名}=example.com&fp=${config_JSON.Fingerprint}&sni=example.com&${路径字段名}=${encodeURIComponent(传输路径参数值) + TLS分片参数}&encryption=none${config_JSON.跳过证书验证 ? '&insecure=1&allowInsecure=1' : ''}#${encodeURIComponent(节点备注)}`;
-								}
-							};
-							const 处理后节点 = await Promise.all(完整优选IP.map(处理单个节点));
-							订阅内容 = 其他节点LINK + 处理后节点.filter(item => item !== null).join('\n');
-						} else {
-										节点备注 = match[3];  // 备注,默认为地址本身
-									}
+									节点地址 = match[1];  // IP地址或域名(可能带方括号)
+									节点端口 = match[2] ? match[2] : (协议类型 === 'ss' && !config_JSON.SS.TLS) ? '80' : '443';  // 端口,TLS默认443 noTLS默认80
+									节点备注 = match[3] || 节点地址 + ' #' + (index + 1);  // 备注,默认显示地址+序号
 								} else {
 									// 不规范的格式，跳过处理返回null
 									console.warn(`[订阅内容] 不规范的IP格式已忽略: ${原始地址}`);
