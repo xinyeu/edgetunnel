@@ -316,11 +316,17 @@ export default {
 								const match = 原始地址.match(regex);
 
 								let 节点地址, 节点端口 = "443", 节点备注;
+								const 国家emoji = { US: '🇺🇸', CN: '🇨🇳', SG: '🇸🇬', JP: '🇯🇵', HK: '🇭🇰', TW: '🇹🇼', GB: '🇬🇧', DE: '🇩🇪', FR: '🇫🇷', AU: '🇦🇺', CA: '🇨🇦', KR: '🇰🇷', IN: '🇮🇳', RU: '🇷🇺', BR: '🇧🇷', NL: '🇳🇱', SE: '🇸🇪', CH: '🇨🇭', IE: '🇮🇪', IT: '🇮🇹', ES: '🇪🇸', NO: '🇳🇴', DK: '🇩🇰', FI: '🇫🇮', PL: '🇵🇱', PT: '🇵🇹', NZ: '🇳🇿', TH: '🇹🇭', VN: '🇻🇳', MY: '🇲🇾', PH: '🇵🇭', ID: '🇮🇩', AE: '🇦🇪', SA: '🇸🇦', IL: '🇮🇱', TR: '🇹🇷', ZA: '🇿🇦', MX: '🇲🇽', AR: '🇦🇷', CL: '🇨🇱', CO: '🇨🇴', PE: '🇵🇪' };
+								const DNS解析 = async (domain) => { try { const res = await fetch(`https://dns.google/resolve?name=${domain}&type=A`); const data = await res.json(); return data.Answer?.[0]?.data || domain; } catch { return domain; } };
+								const 获取节点地理 = async (ip) => { try { const res = await fetch(`https://ipapi.co/${ip}/json/`); const data = await res.json(); return { countryCode: data.country_code || 'US', city: data.city || 'Unknown' }; } catch { const res = await fetch(`http://ip-api.com/json/${ip}?fields=countryCode,city`); return await res.json(); } };
 
 								if (match) {
-									节点地址 = match[1];  // IP地址或域名(可能带方括号)
-									节点端口 = match[2] ? match[2] : (协议类型 === 'ss' && !config_JSON.SS.TLS) ? '80' : '443';  // 端口,TLS默认443 noTLS默认80
-									节点备注 = match[3] || 节点地址;  // 备注,默认为地址本身
+									节点地址 = match[1];
+									节点端口 = match[2] ? match[2] : (协议类型 === 'ss' && !config_JSON.SS.TLS) ? '80' : '443';
+									const 节点IP = /^\d+\.\d+\.\d+\.\d+$/.test(节点地址) ? 节点地址 : await DNS解析(节点地址);
+									const 节点地理 = await 获取节点地理(节点IP);
+									const 序号 = 节点IP.split('.').reduce((a, b) => a + parseInt(b || 0), 0) % 1000 + 1;
+									节点备注 = match[3] || `${国家emoji[节点地理.countryCode] || '🌐'} ${节点地理.city || 'Unknown'} #${序号}`;
 								} else {
 									// 不规范的格式，跳过处理返回null
 									console.warn(`[订阅内容] 不规范的IP格式已忽略: ${原始地址}`);

@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 
 ### Updated
 - 更新 AGENTS.md 项目智能体配置文档
+- 修复代码缩进问题
 
 ## [2026-04-06]
 
