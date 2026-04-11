@@ -330,13 +330,12 @@ export default {
 								const regex = /^(\[[\da-fA-F:]+\]|[\d.]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*)(?::(\d+))?(?:#(.+))?$/;
 								const match = 原始地址.match(regex);
 
-								const 节点位置 = IP位置查询(节点地址);
-
 								let 节点地址, 节点端口 = "443", 节点备注;
 
 								if (match) {
 									节点地址 = match[1];  // IP地址或域名(可能带方括号)
 									节点端口 = match[2] ? match[2] : (协议类型 === 'ss' && !config_JSON.SS.TLS) ? '80' : '443';  // 端口,TLS默认443 noTLS默认80
+									const 节点位置 = IP位置查询(节点地址);
 									节点备注 = match[3] || 节点位置 + ' #' + (index + 1);  // 备注,默认显示位置+序号
 								} else {
 									// 不规范的格式，跳过处理返回null
